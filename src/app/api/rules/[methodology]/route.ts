@@ -1,0 +1,43 @@
+import { NextRequest, NextResponse } from "next/server";
+import { waterfallRules, agileRules } from "@/data/management-rules";
+import { getRulesWithOverrides, saveRuleOverride } from "@/lib/rules";
+
+const rulesMap: Record<string, typeof waterfallRules> = {
+  waterfall: waterfallRules,
+  agile: agileRules,
+};
+
+export async function GET(
+  _request: NextRequest,
+  { params }: { params: Promise<{ methodology: string }> }
+) {
+  const { methodology } = await params;
+  const staticRules = rulesMap[methodology];
+  if (!staticRules) {
+    return NextResponse.json({ error: "Not found" }, { status: 404 });
+  }
+
+  const merged = await getRulesWithOverrides(methodology, staticRules);
+  return NextResponse.json(merged);
+}
+
+export async function PUT(
+  request: NextRequest,
+  { params }: { params: Promise<{ methodology: string }> }
+) {
+  const { methodology } = await params;
+  const staticRules = rulesMap[methodology];
+  if (!staticRules) {
+    return NextResponse.json({ error: "Not found" }, { status: 404 });
+  }
+
+  const body = await request.json();
+  const { ruleId, description, items } = body;
+
+  if (!ruleId || !staticRules.find((r) => r.id === ruleId)) {
+    return NextResponse.json({ error: "Invalid rule" }, { status: 400 });
+  }
+
+  await saveRuleOverride(methodology, ruleId, { description, items });
+  return NextResponse.json({ success: true });
+}
