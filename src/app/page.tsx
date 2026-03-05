@@ -35,7 +35,7 @@ export default function Home() {
                 要件が明確で変更が少ないプロジェクトに適しています。
               </p>
               <div className="mt-4 text-sm text-blue-600 font-medium">
-                10工程を確認 →
+                11工程を確認 →
               </div>
             </div>
           </Link>
@@ -55,7 +55,7 @@ export default function Home() {
                 変化への柔軟な対応が求められるプロジェクトに適しています。
               </p>
               <div className="mt-4 text-sm text-green-600 font-medium">
-                7工程を確認 →
+                8工程を確認 →
               </div>
             </div>
           </Link>

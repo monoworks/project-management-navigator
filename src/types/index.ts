@@ -30,3 +30,10 @@ export interface Methodology {
   description: string;
   phases: Phase[];
 }
+
+export interface ManagementRule {
+  id: string;
+  category: string;
+  description: string;
+  items: string[];
+}

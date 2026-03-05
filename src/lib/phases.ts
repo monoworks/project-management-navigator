@@ -1,4 +1,4 @@
-import { Phase } from "@/types";
+import { Phase, Deliverable } from "@/types";
 import { supabase } from "./supabase";
 
 export async function getPhaseWithOverrides(
@@ -10,7 +10,7 @@ export async function getPhaseWithOverrides(
 
   const { data } = await supabase
     .from("phase_overrides")
-    .select("description, approach, cautions")
+    .select("description, approach, cautions, deliverables")
     .eq("methodology_id", methodologyId)
     .eq("phase_id", phaseId)
     .single();
@@ -22,13 +22,19 @@ export async function getPhaseWithOverrides(
     description: data.description ?? staticPhase.description,
     approach: data.approach ?? staticPhase.approach,
     cautions: data.cautions ?? staticPhase.cautions,
+    deliverables: (data.deliverables as Deliverable[] | null) ?? staticPhase.deliverables,
   };
 }
 
 export async function savePhaseOverride(
   methodologyId: string,
   phaseId: string,
-  data: { description?: string; approach?: string[]; cautions?: string[] }
+  data: {
+    description?: string;
+    approach?: string[];
+    cautions?: string[];
+    deliverables?: Deliverable[];
+  }
 ): Promise<void> {
   if (!supabase) throw new Error("Supabase is not configured");
 

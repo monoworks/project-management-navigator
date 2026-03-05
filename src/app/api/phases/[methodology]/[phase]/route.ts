@@ -47,6 +47,7 @@ export async function PUT(
     description: body.description,
     approach: body.approach,
     cautions: body.cautions,
+    deliverables: body.deliverables,
   });
 
   return NextResponse.json({ success: true });
