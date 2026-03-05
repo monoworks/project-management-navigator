@@ -1,3 +1,12 @@
+export interface UploadedFile {
+  id: string;
+  fileName: string;
+  filePath: string;
+  fileUrl: string;
+  fileSize: number;
+  uploadedAt: string;
+}
+
 export interface Phase {
   id: string;
   name: string;
@@ -6,6 +15,7 @@ export interface Phase {
   approach: string[];
   deliverables: Deliverable[];
   cautions: string[];
+  files?: UploadedFile[];
 }
 
 export interface Deliverable {

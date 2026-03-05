@@ -30,7 +30,7 @@ export default function AgilePhasePage({ params }: { params: Promise<{ phase: st
           </Link>
         </div>
 
-        <PhaseDetail phase={phase} accentColor="green" />
+        <PhaseDetail phase={phase} accentColor="green" methodologyId="agile" />
 
         {/* Navigation */}
         <div className="flex justify-between mt-12 pt-6 border-t border-slate-200">

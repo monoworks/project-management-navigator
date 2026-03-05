@@ -30,7 +30,7 @@ export default function WaterfallPhasePage({ params }: { params: Promise<{ phase
           </Link>
         </div>
 
-        <PhaseDetail phase={phase} accentColor="blue" />
+        <PhaseDetail phase={phase} accentColor="blue" methodologyId="waterfall" />
 
         {/* Navigation */}
         <div className="flex justify-between mt-12 pt-6 border-t border-slate-200">
