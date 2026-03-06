@@ -1,11 +1,11 @@
 "use client";
 
 import { use } from "react";
-import Link from "next/link";
 import { notFound } from "next/navigation";
 import AuthGuard from "@/components/AuthGuard";
 import Header from "@/components/Header";
 import PhaseDetail from "@/components/PhaseDetail";
+import MethodologySidebar from "@/components/MethodologySidebar";
 import { waterfall } from "@/data/waterfall";
 
 export default function WaterfallPhasePage({ params }: { params: Promise<{ phase: string }> }) {
@@ -16,46 +16,23 @@ export default function WaterfallPhasePage({ params }: { params: Promise<{ phase
     notFound();
   }
 
-  const currentIndex = waterfall.phases.findIndex((p) => p.id === phaseId);
-  const prevPhase = currentIndex > 0 ? waterfall.phases[currentIndex - 1] : null;
-  const nextPhase = currentIndex < waterfall.phases.length - 1 ? waterfall.phases[currentIndex + 1] : null;
-
   return (
     <AuthGuard>
       <Header />
-      <main className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
-        <div className="mb-6">
-          <Link href="/waterfall" className="text-sm text-slate-500 hover:text-blue-600 transition-colors">
-            ← ウォーターフォール一覧に戻る
-          </Link>
-        </div>
-
-        <PhaseDetail phase={phase} accentColor="blue" methodologyId="waterfall" />
-
-        {/* Navigation */}
-        <div className="flex justify-between mt-12 pt-6 border-t border-slate-200">
-          {prevPhase ? (
-            <Link
-              href={`/waterfall/${prevPhase.id}`}
-              className="text-sm text-slate-600 hover:text-blue-600 transition-colors"
-            >
-              ← {prevPhase.name}
-            </Link>
-          ) : (
-            <div />
-          )}
-          {nextPhase ? (
-            <Link
-              href={`/waterfall/${nextPhase.id}`}
-              className="text-sm text-slate-600 hover:text-blue-600 transition-colors"
-            >
-              {nextPhase.name} →
-            </Link>
-          ) : (
-            <div />
-          )}
-        </div>
-      </main>
+      <div className="flex h-[calc(100vh-65px)]">
+        <MethodologySidebar
+          methodologyName={waterfall.name}
+          methodologyPath="waterfall"
+          phases={waterfall.phases}
+          currentPhaseId={phaseId}
+          accentColor="blue"
+        />
+        <main className="flex-1 overflow-y-auto px-6 lg:px-10 py-8">
+          <div className="max-w-4xl">
+            <PhaseDetail phase={phase} accentColor="blue" methodologyId="waterfall" />
+          </div>
+        </main>
+      </div>
     </AuthGuard>
   );
 }
