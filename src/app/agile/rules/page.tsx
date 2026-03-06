@@ -129,6 +129,12 @@ export default function AgileRulesPage() {
   const [editItems, setEditItems] = useState<string[]>([]);
   const [isSaving, setIsSaving] = useState(false);
   const [ruleFiles, setRuleFiles] = useState<Record<string, UploadedFile[]>>({});
+  const [showAddForm, setShowAddForm] = useState(false);
+  const [newCategory, setNewCategory] = useState("");
+  const [newDescription, setNewDescription] = useState("");
+  const [newItems, setNewItems] = useState<string[]>([""]);
+  const [isAdding, setIsAdding] = useState(false);
+  const [deletingId, setDeletingId] = useState<string | null>(null);
 
   useEffect(() => {
     fetch("/api/rules/agile")
@@ -187,6 +193,58 @@ export default function AgileRulesPage() {
     }
   }
 
+  async function handleAddCategory() {
+    if (!newCategory.trim()) return;
+    setIsAdding(true);
+    const id = `custom-${Date.now()}`;
+    const filteredItems = newItems.filter((item) => item.trim());
+    try {
+      const res = await fetch("/api/rules/agile", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          id,
+          category: newCategory.trim(),
+          description: newDescription.trim(),
+          items: filteredItems,
+        }),
+      });
+      if (!res.ok) throw new Error("Add failed");
+      setRules([
+        ...rules,
+        { id, category: newCategory.trim(), description: newDescription.trim(), items: filteredItems },
+      ]);
+      setShowAddForm(false);
+      setNewCategory("");
+      setNewDescription("");
+      setNewItems([""]);
+    } catch (err) {
+      alert("カテゴリの追加に失敗しました");
+      console.error(err);
+    } finally {
+      setIsAdding(false);
+    }
+  }
+
+  async function handleDeleteCategory(ruleId: string) {
+    if (!confirm("このカテゴリを削除しますか？")) return;
+    setDeletingId(ruleId);
+    try {
+      const res = await fetch("/api/rules/agile", {
+        method: "DELETE",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ ruleId }),
+      });
+      if (!res.ok) throw new Error("Delete failed");
+      setRules(rules.filter((r) => r.id !== ruleId));
+    } catch (err) {
+      alert("カテゴリの削除に失敗しました");
+      console.error(err);
+    } finally {
+      setDeletingId(null);
+    }
+  }
+
   function updateRuleFiles(ruleId: string, files: UploadedFile[]) {
     setRuleFiles((prev) => ({ ...prev, [ruleId]: files }));
   }
@@ -217,19 +275,31 @@ export default function AgileRulesPage() {
           {rules.map((rule) => {
             const isEditing = editingId === rule.id;
             return (
-              <section key={rule.id} className="bg-white rounded-lg border border-slate-200 p-6">
+              <section key={rule.id} className="bg-white rounded-lg border border-slate-200 p-6 relative">
                 <div className="flex items-center justify-between mb-2">
                   <h2 className="text-lg font-bold text-slate-800">{rule.category}</h2>
                   {canEdit && !isEditing && (
-                    <button
-                      onClick={() => startEditing(rule)}
-                      className="text-slate-400 hover:text-slate-600 transition-colors p-1 rounded-lg hover:bg-slate-50"
-                      title="編集"
-                    >
-                      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
-                      </svg>
-                    </button>
+                    <div className="flex items-center gap-1">
+                      <button
+                        onClick={() => startEditing(rule)}
+                        className="text-slate-400 hover:text-slate-600 transition-colors p-1 rounded-lg hover:bg-slate-50"
+                        title="編集"
+                      >
+                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                        </svg>
+                      </button>
+                      <button
+                        onClick={() => handleDeleteCategory(rule.id)}
+                        disabled={deletingId === rule.id}
+                        className="text-slate-400 hover:text-red-500 transition-colors p-1 rounded-lg hover:bg-red-50 disabled:opacity-50"
+                        title="カテゴリを削除"
+                      >
+                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                        </svg>
+                      </button>
+                    </div>
                   )}
                 </div>
 
@@ -320,6 +390,106 @@ export default function AgileRulesPage() {
               </section>
             );
           })}
+
+          {canEdit && !showAddForm && (
+            <button
+              onClick={() => setShowAddForm(true)}
+              className="w-full py-4 border-2 border-dashed border-slate-300 rounded-lg text-slate-500 hover:border-green-400 hover:text-green-600 transition-colors flex items-center justify-center gap-2"
+            >
+              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
+              </svg>
+              カテゴリを追加
+            </button>
+          )}
+
+          {canEdit && showAddForm && (
+            <section className="bg-white rounded-lg border-2 border-green-300 p-6">
+              <h2 className="text-lg font-bold text-slate-800 mb-4">新しいカテゴリを追加</h2>
+              <div className="space-y-4">
+                <div>
+                  <label className="block text-sm font-medium text-slate-600 mb-1">カテゴリ名</label>
+                  <input
+                    type="text"
+                    value={newCategory}
+                    onChange={(e) => setNewCategory(e.target.value)}
+                    placeholder="例: 課題管理"
+                    className="w-full p-2 rounded border border-slate-300 text-sm focus:outline-none focus:ring-2 focus:ring-green-300"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-slate-600 mb-1">説明</label>
+                  <textarea
+                    value={newDescription}
+                    onChange={(e) => setNewDescription(e.target.value)}
+                    placeholder="このカテゴリの説明を入力"
+                    className="w-full p-2 rounded border border-slate-300 text-sm resize-y min-h-[60px] focus:outline-none focus:ring-2 focus:ring-green-300"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-slate-600 mb-1">ルール項目</label>
+                  <ul className="space-y-2">
+                    {newItems.map((item, i) => (
+                      <li key={i} className="flex items-start gap-2">
+                        <span className="text-green-500 mt-2.5 shrink-0">
+                          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                          </svg>
+                        </span>
+                        <textarea
+                          value={item}
+                          onChange={(e) => {
+                            const u = [...newItems];
+                            u[i] = e.target.value;
+                            setNewItems(u);
+                          }}
+                          placeholder="ルール項目を入力"
+                          className="flex-1 p-2 rounded border border-slate-300 text-sm resize-y min-h-[36px] focus:outline-none focus:ring-2 focus:ring-green-300"
+                        />
+                        {newItems.length > 1 && (
+                          <button
+                            onClick={() => setNewItems(newItems.filter((_, j) => j !== i))}
+                            className="text-red-400 hover:text-red-600 shrink-0 mt-2"
+                          >
+                            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                            </svg>
+                          </button>
+                        )}
+                      </li>
+                    ))}
+                  </ul>
+                  <button
+                    onClick={() => setNewItems([...newItems, ""])}
+                    className="text-sm text-green-600 hover:text-green-800 transition-colors mt-2"
+                  >
+                    + ルール項目を追加
+                  </button>
+                </div>
+                <div className="flex items-center justify-end gap-3 pt-2 border-t border-slate-100">
+                  <button
+                    onClick={() => {
+                      setShowAddForm(false);
+                      setNewCategory("");
+                      setNewDescription("");
+                      setNewItems([""]);
+                    }}
+                    disabled={isAdding}
+                    className="px-4 py-2 text-sm text-slate-600 hover:text-slate-800 transition-colors disabled:opacity-50"
+                  >
+                    キャンセル
+                  </button>
+                  <button
+                    onClick={handleAddCategory}
+                    disabled={isAdding || !newCategory.trim()}
+                    className="bg-green-600 hover:bg-green-700 text-white px-6 py-2 text-sm rounded-lg transition-colors disabled:opacity-50"
+                  >
+                    {isAdding ? "追加中..." : "追加"}
+                  </button>
+                </div>
+              </div>
+            </section>
+          )}
         </div>
       </main>
     </AuthGuard>
