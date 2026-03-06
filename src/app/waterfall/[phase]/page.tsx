@@ -6,10 +6,12 @@ import AuthGuard from "@/components/AuthGuard";
 import Header from "@/components/Header";
 import PhaseDetail from "@/components/PhaseDetail";
 import MethodologySidebar from "@/components/MethodologySidebar";
+import { useAuth } from "@/components/AuthProvider";
 import { waterfall } from "@/data/waterfall";
 
 export default function WaterfallPhasePage({ params }: { params: Promise<{ phase: string }> }) {
   const { phase: phaseId } = use(params);
+  const { role } = useAuth();
   const phase = waterfall.phases.find((p) => p.id === phaseId);
 
   if (!phase) {
@@ -29,7 +31,7 @@ export default function WaterfallPhasePage({ params }: { params: Promise<{ phase
         />
         <main className="flex-1 overflow-y-auto px-6 lg:px-10 py-8">
           <div className="max-w-4xl">
-            <PhaseDetail phase={phase} accentColor="blue" methodologyId="waterfall" />
+            <PhaseDetail phase={phase} accentColor="blue" methodologyId="waterfall" canEdit={role === "editor"} />
           </div>
         </main>
       </div>

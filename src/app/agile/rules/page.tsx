@@ -4,6 +4,7 @@ import { useState, useEffect, useCallback, useRef } from "react";
 import Link from "next/link";
 import AuthGuard from "@/components/AuthGuard";
 import Header from "@/components/Header";
+import { useAuth } from "@/components/AuthProvider";
 import { agileRules } from "@/data/management-rules";
 import { ManagementRule, UploadedFile } from "@/types";
 
@@ -11,11 +12,13 @@ function RuleFileSection({
   files,
   methodologyId,
   ruleId,
+  canEdit,
   onFilesChange,
 }: {
   files: UploadedFile[];
   methodologyId: string;
   ruleId: string;
+  canEdit: boolean;
   onFilesChange: (files: UploadedFile[]) => void;
 }) {
   const [uploading, setUploading] = useState(false);
@@ -75,14 +78,18 @@ function RuleFileSection({
           </svg>
           成果物サンプル
         </h4>
-        <button
-          onClick={() => fileInputRef.current?.click()}
-          disabled={uploading}
-          className="bg-green-600 hover:bg-green-700 text-white text-xs px-3 py-1 rounded-md transition-colors disabled:opacity-50"
-        >
-          {uploading ? "アップロード中..." : "ファイル追加"}
-        </button>
-        <input ref={fileInputRef} type="file" className="hidden" onChange={handleUpload} />
+        {canEdit && (
+          <>
+            <button
+              onClick={() => fileInputRef.current?.click()}
+              disabled={uploading}
+              className="bg-green-600 hover:bg-green-700 text-white text-xs px-3 py-1 rounded-md transition-colors disabled:opacity-50"
+            >
+              {uploading ? "アップロード中..." : "ファイル追加"}
+            </button>
+            <input ref={fileInputRef} type="file" className="hidden" onChange={handleUpload} />
+          </>
+        )}
       </div>
       {files.length > 0 && (
         <div className="space-y-2">
@@ -95,11 +102,13 @@ function RuleFileSection({
                 {file.fileName}
               </a>
               <span className="text-slate-400 text-xs shrink-0">{formatFileSize(file.fileSize)}</span>
-              <button onClick={() => handleDelete(file)} className="text-red-400 hover:text-red-600 transition-colors shrink-0" title="削除">
-                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-                </svg>
-              </button>
+              {canEdit && (
+                <button onClick={() => handleDelete(file)} className="text-red-400 hover:text-red-600 transition-colors shrink-0" title="削除">
+                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                  </svg>
+                </button>
+              )}
             </div>
           ))}
         </div>
@@ -112,6 +121,8 @@ function RuleFileSection({
 }
 
 export default function AgileRulesPage() {
+  const { role } = useAuth();
+  const canEdit = role === "editor";
   const [rules, setRules] = useState<ManagementRule[]>(agileRules);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editDescription, setEditDescription] = useState("");
@@ -209,7 +220,7 @@ export default function AgileRulesPage() {
               <section key={rule.id} className="bg-white rounded-lg border border-slate-200 p-6">
                 <div className="flex items-center justify-between mb-2">
                   <h2 className="text-lg font-bold text-slate-800">{rule.category}</h2>
-                  {!isEditing && (
+                  {canEdit && !isEditing && (
                     <button
                       onClick={() => startEditing(rule)}
                       className="text-slate-400 hover:text-slate-600 transition-colors p-1 rounded-lg hover:bg-slate-50"
@@ -303,6 +314,7 @@ export default function AgileRulesPage() {
                   files={ruleFiles[rule.id] ?? []}
                   methodologyId="agile"
                   ruleId={rule.id}
+                  canEdit={canEdit}
                   onFilesChange={(files) => updateRuleFiles(rule.id, files)}
                 />
               </section>
