@@ -161,7 +161,7 @@ export default function PhaseDetail({ phase, accentColor, methodologyId }: Phase
   );
   const [isSaving, setIsSaving] = useState(false);
   const [currentPhase, setCurrentPhase] = useState(phase);
-  const [files, setFiles] = useState<UploadedFile[]>(phase.files ?? []);
+  const [deliverableFiles, setDeliverableFiles] = useState<Record<number, UploadedFile[]>>({});
 
   useEffect(() => {
     if (!methodologyId) return;
@@ -174,7 +174,7 @@ export default function PhaseDetail({ phase, accentColor, methodologyId }: Phase
           setEditApproach(data.approach);
           setEditCautions(data.cautions);
           setEditDeliverables(data.deliverables.map((d: Deliverable) => ({ ...d })));
-          setFiles(data.files ?? []);
+          setDeliverableFiles(data.deliverableFiles ?? {});
         }
       })
       .catch(() => {});
@@ -391,11 +391,13 @@ export default function PhaseDetail({ phase, accentColor, methodologyId }: Phase
                 )}
                 {methodologyId && !isEditing && (
                   <FileSection
-                    files={files}
+                    files={deliverableFiles[i] ?? []}
                     methodologyId={methodologyId}
-                    phaseId={phase.id}
+                    phaseId={`${phase.id}-d${i}`}
                     accentColor={accentColor}
-                    onFilesChange={setFiles}
+                    onFilesChange={(newFiles) =>
+                      setDeliverableFiles((prev) => ({ ...prev, [i]: newFiles }))
+                    }
                   />
                 )}
               </div>

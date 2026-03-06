@@ -22,9 +22,18 @@ export async function GET(
   }
 
   const merged = await getPhaseWithOverrides(methodology, phaseId, staticPhase);
-  const files = await getDeliverableFiles(methodology, phaseId);
 
-  return NextResponse.json({ ...merged, files });
+  // Fetch files per deliverable
+  const deliverableFiles: Record<number, Awaited<ReturnType<typeof getDeliverableFiles>>> = {};
+  await Promise.all(
+    merged.deliverables.map((_: unknown, i: number) =>
+      getDeliverableFiles(methodology, `${phaseId}-d${i}`).then((f) => {
+        deliverableFiles[i] = f;
+      })
+    )
+  );
+
+  return NextResponse.json({ ...merged, deliverableFiles });
 }
 
 export async function PUT(
