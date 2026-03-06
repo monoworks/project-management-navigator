@@ -1,11 +1,114 @@
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import Link from "next/link";
 import AuthGuard from "@/components/AuthGuard";
 import Header from "@/components/Header";
 import { agileRules } from "@/data/management-rules";
-import { ManagementRule } from "@/types";
+import { ManagementRule, UploadedFile } from "@/types";
+
+function RuleFileSection({
+  files,
+  methodologyId,
+  ruleId,
+  onFilesChange,
+}: {
+  files: UploadedFile[];
+  methodologyId: string;
+  ruleId: string;
+  onFilesChange: (files: UploadedFile[]) => void;
+}) {
+  const [uploading, setUploading] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+
+  function formatFileSize(bytes: number) {
+    if (bytes < 1024) return `${bytes} B`;
+    if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB`;
+    return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
+  }
+
+  async function handleUpload(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    setUploading(true);
+    try {
+      const formData = new FormData();
+      formData.append("methodologyId", methodologyId);
+      formData.append("phaseId", `rule-${ruleId}`);
+      formData.append("file", file);
+      const res = await fetch("/api/files", { method: "POST", body: formData });
+      if (!res.ok) throw new Error("Upload failed");
+      const uploaded: UploadedFile = await res.json();
+      onFilesChange([uploaded, ...files]);
+    } catch (err) {
+      alert("アップロードに失敗しました");
+      console.error(err);
+    } finally {
+      setUploading(false);
+      if (fileInputRef.current) fileInputRef.current.value = "";
+    }
+  }
+
+  async function handleDelete(file: UploadedFile) {
+    if (!confirm(`「${file.fileName}」を削除しますか？`)) return;
+    try {
+      const res = await fetch(`/api/files/${file.id}`, {
+        method: "DELETE",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ filePath: file.filePath }),
+      });
+      if (!res.ok) throw new Error("Delete failed");
+      onFilesChange(files.filter((f) => f.id !== file.id));
+    } catch (err) {
+      alert("削除に失敗しました");
+      console.error(err);
+    }
+  }
+
+  return (
+    <div className="mt-4 pt-4 border-t border-slate-100">
+      <div className="flex items-center gap-2 mb-3">
+        <h4 className="text-sm font-semibold text-slate-600 flex items-center gap-1.5">
+          <svg className="w-4 h-4 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15.172 7l-6.586 6.586a2 2 0 102.828 2.828l6.414-6.586a4 4 0 00-5.656-5.656l-6.415 6.585a6 6 0 108.486 8.486L20.5 13" />
+          </svg>
+          成果物サンプル
+        </h4>
+        <button
+          onClick={() => fileInputRef.current?.click()}
+          disabled={uploading}
+          className="bg-green-600 hover:bg-green-700 text-white text-xs px-3 py-1 rounded-md transition-colors disabled:opacity-50"
+        >
+          {uploading ? "アップロード中..." : "ファイル追加"}
+        </button>
+        <input ref={fileInputRef} type="file" className="hidden" onChange={handleUpload} />
+      </div>
+      {files.length > 0 && (
+        <div className="space-y-2">
+          {files.map((file) => (
+            <div key={file.id} className="flex items-center gap-3 bg-slate-50 rounded-md px-3 py-2 text-sm">
+              <svg className="w-4 h-4 text-slate-400 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15.172 7l-6.586 6.586a2 2 0 102.828 2.828l6.414-6.586a4 4 0 00-5.656-5.656l-6.415 6.585a6 6 0 108.486 8.486L20.5 13" />
+              </svg>
+              <a href={file.fileUrl} target="_blank" rel="noopener noreferrer" className="text-green-600 hover:underline truncate flex-1">
+                {file.fileName}
+              </a>
+              <span className="text-slate-400 text-xs shrink-0">{formatFileSize(file.fileSize)}</span>
+              <button onClick={() => handleDelete(file)} className="text-red-400 hover:text-red-600 transition-colors shrink-0" title="削除">
+                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                </svg>
+              </button>
+            </div>
+          ))}
+        </div>
+      )}
+      {files.length === 0 && (
+        <p className="text-xs text-slate-400">アップロードされたファイルはありません</p>
+      )}
+    </div>
+  );
+}
 
 export default function AgileRulesPage() {
   const [rules, setRules] = useState<ManagementRule[]>(agileRules);
@@ -13,6 +116,7 @@ export default function AgileRulesPage() {
   const [editDescription, setEditDescription] = useState("");
   const [editItems, setEditItems] = useState<string[]>([]);
   const [isSaving, setIsSaving] = useState(false);
+  const [ruleFiles, setRuleFiles] = useState<Record<string, UploadedFile[]>>({});
 
   useEffect(() => {
     fetch("/api/rules/agile")
@@ -21,6 +125,23 @@ export default function AgileRulesPage() {
         if (data) setRules(data);
       })
       .catch(() => {});
+  }, []);
+
+  useEffect(() => {
+    const ruleIds = agileRules.map((r) => r.id);
+    Promise.all(
+      ruleIds.map((id) =>
+        fetch(`/api/files?methodologyId=agile&phaseId=rule-${id}`)
+          .then((res) => (res.ok ? res.json() : []))
+          .catch(() => [])
+      )
+    ).then((results) => {
+      const filesMap: Record<string, UploadedFile[]> = {};
+      ruleIds.forEach((id, i) => {
+        filesMap[id] = results[i];
+      });
+      setRuleFiles(filesMap);
+    });
   }, []);
 
   const startEditing = useCallback((rule: ManagementRule) => {
@@ -52,6 +173,10 @@ export default function AgileRulesPage() {
     } finally {
       setIsSaving(false);
     }
+  }
+
+  function updateRuleFiles(ruleId: string, files: UploadedFile[]) {
+    setRuleFiles((prev) => ({ ...prev, [ruleId]: files }));
   }
 
   return (
@@ -172,6 +297,13 @@ export default function AgileRulesPage() {
                     </ul>
                   </>
                 )}
+
+                <RuleFileSection
+                  files={ruleFiles[rule.id] ?? []}
+                  methodologyId="agile"
+                  ruleId={rule.id}
+                  onFilesChange={(files) => updateRuleFiles(rule.id, files)}
+                />
               </section>
             );
           })}

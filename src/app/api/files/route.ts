@@ -1,5 +1,21 @@
 import { NextRequest, NextResponse } from "next/server";
-import { uploadDeliverableFile } from "@/lib/files";
+import { getDeliverableFiles, uploadDeliverableFile } from "@/lib/files";
+
+export async function GET(request: NextRequest) {
+  const { searchParams } = new URL(request.url);
+  const methodologyId = searchParams.get("methodologyId");
+  const phaseId = searchParams.get("phaseId");
+
+  if (!methodologyId || !phaseId) {
+    return NextResponse.json(
+      { error: "methodologyId and phaseId are required" },
+      { status: 400 }
+    );
+  }
+
+  const files = await getDeliverableFiles(methodologyId, phaseId);
+  return NextResponse.json(files);
+}
 
 export async function POST(request: NextRequest) {
   const formData = await request.formData();
