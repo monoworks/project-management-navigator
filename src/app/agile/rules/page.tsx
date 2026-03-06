@@ -37,11 +37,12 @@ function RuleFileSection({
       formData.append("phaseId", `rule-${ruleId}`);
       formData.append("file", file);
       const res = await fetch("/api/files", { method: "POST", body: formData });
-      if (!res.ok) throw new Error("Upload failed");
-      const uploaded: UploadedFile = await res.json();
-      onFilesChange([uploaded, ...files]);
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || "Upload failed");
+      onFilesChange([data, ...files]);
     } catch (err) {
-      alert("アップロードに失敗しました");
+      const msg = err instanceof Error ? err.message : "Upload failed";
+      alert(`アップロードに失敗しました: ${msg}`);
       console.error(err);
     } finally {
       setUploading(false);

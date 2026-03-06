@@ -30,14 +30,20 @@ export async function POST(request: NextRequest) {
     );
   }
 
-  const buffer = Buffer.from(await file.arrayBuffer());
-  const uploaded = await uploadDeliverableFile(
-    methodologyId,
-    phaseId,
-    file.name,
-    buffer,
-    file.type
-  );
+  try {
+    const buffer = Buffer.from(await file.arrayBuffer());
+    const uploaded = await uploadDeliverableFile(
+      methodologyId,
+      phaseId,
+      file.name,
+      buffer,
+      file.type
+    );
 
-  return NextResponse.json(uploaded);
+    return NextResponse.json(uploaded);
+  } catch (err) {
+    console.error("File upload error:", err);
+    const message = err instanceof Error ? err.message : "Upload failed";
+    return NextResponse.json({ error: message }, { status: 500 });
+  }
 }
