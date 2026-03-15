@@ -14,7 +14,7 @@ export default function Home() {
             プロジェクトマネジメントナビゲーター
           </h1>
           <p className="text-slate-600 max-w-2xl mx-auto">
-            システム開発の各工程における進め方、成果物サンプル、注意事項を参照できます。
+            システム開発を外部委託する際に、発注側企業が各工程で確認すべきポイント・成果物・注意事項を参照できます。
             プロジェクトの開発手法を選択してください。
           </p>
         </div>
@@ -35,7 +35,7 @@ export default function Home() {
                 要件が明確で変更が少ないプロジェクトに適しています。
               </p>
               <div className="mt-4 text-sm text-blue-600 font-medium">
-                11工程を確認 →
+                8工程を確認 →
               </div>
             </div>
           </Link>
@@ -55,7 +55,7 @@ export default function Home() {
                 変化への柔軟な対応が求められるプロジェクトに適しています。
               </p>
               <div className="mt-4 text-sm text-green-600 font-medium">
-                8工程を確認 →
+                5工程を確認 →
               </div>
             </div>
           </Link>
