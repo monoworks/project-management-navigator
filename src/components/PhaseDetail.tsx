@@ -303,6 +303,28 @@ export default function PhaseDetail({ phase, accentColor, methodologyId, canEdit
                 </span>
                 {isEditing ? (
                   <div className="flex-1 flex gap-2">
+                    <div className="flex flex-col gap-0.5 shrink-0 mt-0.5">
+                      <button
+                        onClick={() => { const u = [...editApproach]; [u[i - 1], u[i]] = [u[i], u[i - 1]]; setEditApproach(u); }}
+                        disabled={i === 0}
+                        className="text-slate-400 hover:text-slate-600 disabled:opacity-30 disabled:cursor-not-allowed"
+                        title="上に移動"
+                      >
+                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 15l7-7 7 7" />
+                        </svg>
+                      </button>
+                      <button
+                        onClick={() => { const u = [...editApproach]; [u[i], u[i + 1]] = [u[i + 1], u[i]]; setEditApproach(u); }}
+                        disabled={i === editApproach.length - 1}
+                        className="text-slate-400 hover:text-slate-600 disabled:opacity-30 disabled:cursor-not-allowed"
+                        title="下に移動"
+                      >
+                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                        </svg>
+                      </button>
+                    </div>
                     <textarea
                       value={step}
                       onChange={(e) => { const u = [...editApproach]; u[i] = e.target.value; setEditApproach(u); }}
@@ -343,6 +365,28 @@ export default function PhaseDetail({ phase, accentColor, methodologyId, canEdit
                 {isEditing ? (
                   <div className="space-y-3">
                     <div className="flex items-center gap-2">
+                      <div className="flex flex-col gap-0.5 shrink-0">
+                        <button
+                          onClick={() => { const u = [...editDeliverables]; [u[i - 1], u[i]] = [u[i], u[i - 1]]; setEditDeliverables(u); }}
+                          disabled={i === 0}
+                          className="text-slate-400 hover:text-slate-600 disabled:opacity-30 disabled:cursor-not-allowed"
+                          title="上に移動"
+                        >
+                          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 15l7-7 7 7" />
+                          </svg>
+                        </button>
+                        <button
+                          onClick={() => { const u = [...editDeliverables]; [u[i], u[i + 1]] = [u[i + 1], u[i]]; setEditDeliverables(u); }}
+                          disabled={i === editDeliverables.length - 1}
+                          className="text-slate-400 hover:text-slate-600 disabled:opacity-30 disabled:cursor-not-allowed"
+                          title="下に移動"
+                        >
+                          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                          </svg>
+                        </button>
+                      </div>
                       <input
                         value={deliverable.name}
                         onChange={(e) => {
