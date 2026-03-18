@@ -36,7 +36,8 @@ export async function uploadDeliverableFile(
 ): Promise<UploadedFile> {
   if (!supabase) throw new Error("Supabase is not configured");
 
-  const uniqueName = `${Date.now()}_${fileName}`;
+  const ext = fileName.includes(".") ? fileName.substring(fileName.lastIndexOf(".")) : "";
+  const uniqueName = `${Date.now()}_${crypto.randomUUID()}${ext}`;
   const filePath = `${methodologyId}/${phaseId}/${uniqueName}`;
 
   const { error: uploadError } = await supabase.storage
