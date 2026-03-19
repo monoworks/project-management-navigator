@@ -83,7 +83,8 @@ src/
 ### Supabase Storage
 
 - バケット: `deliverables`
-- パス構造: `{methodology}/{phase}/{timestamp}_{filename}`
+- パス構造: `{methodology}/{phase}/{timestamp}_{uuid}{ext}`
+- ファイル名サニタイズ: Supabase Storageは日本語・スペースを含むパスに対応していないため、ストレージ上のパスにはUUIDベースの一意名を使用し、元のファイル名は`deliverable_files`テーブルの`file_name`カラムに保持する
 
 ## 認証
 
