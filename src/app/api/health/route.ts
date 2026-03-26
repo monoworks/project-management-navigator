@@ -8,7 +8,7 @@ export async function GET() {
 
   const { error } = await supabase
     .from("phase_overrides")
-    .select("id")
+    .select("*")
     .limit(1);
 
   if (error) {
